@@ -1,31 +1,42 @@
-# Plantique plant recognition
+# Plant species and disease identification
 
-A small FastAPI demo that sends a plant photo to Pl@ntNet and returns the most likely matches. I made it to try using an API key with an AI-powered service.
+FastAPI app using Pl@ntNet to identify plant species and supported diseases. The browser interface is served from [`index.html`](./index.html). No disease match does not guarantee a healthy plant.
 
-## Run it
+## Run
 
-You’ll need Python and your own Pl@ntNet API key.
+```bash
+pip install -r requirements.txt
+```
 
-1. Install the dependencies:
+Copy `.env.example` to `.env`, set `PLANTNET_API_KEY`, then start the app:
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+uvicorn demo:app --reload
+```
 
-2. Copy `.env.example` to `.env` and add your key:
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) for the upload page or [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) for Swagger.
 
-   ```env
-   PLANTNET_API_KEY=your_key_here
-   ```
+## Flow
 
-3. Start the app:
+Choose one or more images and an organ (`auto`, `leaf`, `flower`, `fruit`, `bark`). The page sends each image separately to `POST /identify`. The API fixes image orientation, converts to RGB, resizes to 1600 × 1600 maximum, and re-encodes as JPEG. It then calls Pl@ntNet's disease and species identification endpoints.
 
-   ```bash
-   uvicorn demo:app --reload
-   ```
+Each result card shows the plant's scientific and common names, its score, disease names/codes/scores, and remaining API quota when available. Each image uses two Pl@ntNet requests. Results are limited to Pl@ntNet's supported species and diseases.
 
-4. Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs), choose `POST /identify`, upload a photo, and try it.
+## Example response
 
-The `organ` field is optional. It accepts `auto`, `leaf`, `flower`, `fruit`, or `bark`.
+```json
+{
+  "status": "ok",
+  "plant": {
+    "name": "Solanum lycopersicum",
+    "common_names": ["tomate"],
+    "score": 0.982
+  },
+  "results": [
+    {"eppo_code": "APHISP", "disease_name": "Aphis sp.", "score": 0.914}
+  ],
+  "remaining_quota": 495
+}
+```
 
-Each request uses your Pl@ntNet API quota. Keep your API key in `.env` and don’t commit it.
+Keep your API key private; do not commit `.env`.
